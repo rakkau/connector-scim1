@@ -201,10 +201,8 @@ public class ScimConnector implements Connector, CreateOp, DeleteOp, SchemaOp, S
 
 			loginUrlParts = this.configuration.getBaseUrl().split("\\."); // e.g.
 		}
-		// https://login.salesforce.com
-		if (loginUrlParts.length >= 2) {
-			providerName = loginUrlParts[1];
-		}
+
+		providerName = String.join(".", loginUrlParts);
 		StrategyFetcher fetcher = new StrategyFetcher();
 		strategy = fetcher.fetchStrategy(providerName);
 
@@ -217,7 +215,7 @@ public class ScimConnector implements Connector, CreateOp, DeleteOp, SchemaOp, S
 	 * generic methods can be applied to the query. If not the methods
 	 * implemented for core schema processing are applied. This method is used
 	 * to update singular and non complex attributes, e.g. name.familyname.
-	 * 
+	 *
 	 * @return the Uid of the updated object.
 	 **/
 
