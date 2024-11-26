@@ -80,8 +80,8 @@ public class SalesforceHandlingStrategy extends StandardScimHandlingStrategy imp
 		multivaluedAttributes.add("members.default.display");
 
 		// writableAttributes.add("name.formatted");
-		// writableAttributes.add("entitlements.default.value");
-		// writableAttributes.add("emails.work.value");
+		   writableAttributes.add("entitlements.default.value");
+		   writableAttributes.add("emails.work.value");
 		// writableAttributes.add("phoneNumbers.work.value");
 		// writableAttributes.add("phoneNumbers.fax.value");
 		// writableAttributes.add("phoneNumbers.mobile.value");
@@ -291,11 +291,11 @@ public class SalesforceHandlingStrategy extends StandardScimHandlingStrategy imp
 
 		if (multivaluedAttributes.contains(attributeName)) {
 			infoBuilder.setMultiValued(true);
-		} /*
-			 * else if (writableAttributes.contains(attributeName)) {
-			 * infoBuilder.setUpdateable(true); infoBuilder.setCreateable(true);
-			 * infoBuilder.setReadable(true); }
-			 */
+		}
+			  else if (writableAttributes.contains(attributeName)) {
+			  infoBuilder.setUpdateable(true); infoBuilder.setCreateable(true);
+			  infoBuilder.setReadable(true); }
+
 		return infoBuilder;
 	}
 
