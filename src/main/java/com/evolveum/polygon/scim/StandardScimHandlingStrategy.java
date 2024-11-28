@@ -227,6 +227,7 @@ public class StandardScimHandlingStrategy implements HandlingStrategy {
 
 		Header authHeader = accessManager.getAuthHeader();
 		String scimBaseUri = accessManager.getBaseUri();
+		scimBaseUri = scimBaseUri.replace("/v1", "/v2");
 
 		if (authHeader == null || scimBaseUri.isEmpty()) {
 
@@ -315,7 +316,7 @@ public class StandardScimHandlingStrategy implements HandlingStrategy {
 						try {
 
 							if (valueIsUid) {
-
+								jsonObject = convertV2toV1(jsonObject);
 								ConnectorObject connectorObject = buildConnectorObject(jsonObject, resourceEndPoint);
 								resultHandler.handle(connectorObject);
 
@@ -327,6 +328,7 @@ public class StandardScimHandlingStrategy implements HandlingStrategy {
 											conf);
 
 								} else if (jsonObject.has(RESOURCES)) {
+									jsonObject = transformResourceV2toV1(jsonObject);
 									int amountOfResources = jsonObject.getJSONArray(RESOURCES).length();
 									int totalResults = 0;
 									int startIndex = 0;
@@ -504,6 +506,121 @@ public class StandardScimHandlingStrategy implements HandlingStrategy {
 				throw new ConnectorIOException(errorBuilder.toString(), e);
 			}
 		}
+	}
+
+	private JSONObject transformResourceV2toV1(JSONObject jsonObject) throws JSONException {
+		// Check if it contains the "Resources" node
+		if (jsonObject.has("Resources")) {
+			JSONArray resources = jsonObject.getJSONArray("Resources");
+
+			// Iterate over all resources in the "Resources" node
+			for (int i = 0; i < resources.length(); i++) {
+				JSONObject resource = resources.getJSONObject(i);
+
+				// Update the schema keys to be compatible with V1
+				JSONArray schemas = resource.getJSONArray("schemas");
+				for (int j = 0; j < schemas.length(); j++) {
+					if (schemas.getString(j).equals("urn:ietf:params:scim:schemas:core:2.0:User")) {
+						schemas.put(j, "urn:scim:schemas:core:1.0");
+					}
+					if (schemas.getString(j).equals("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")) {
+						schemas.put(j, "urn:scim:schemas:extension:enterprise:1.0");
+					}
+				}
+
+				// Remove attributes not compatible with V1 in the "entitlements" key
+				if (resource.has("entitlements")) {
+					JSONArray entitlements = resource.getJSONArray("entitlements");
+					for (int k = 0; k < entitlements.length(); k++) {
+						JSONObject entitlement = entitlements.getJSONObject(k);
+						entitlement.remove("$ref");
+						entitlement.remove("type");
+					}
+				}
+
+				// Relocate the "alias" key within Salesforce data
+				if (resource.has("urn:salesforce:schemas:extension:2.0")) {
+					JSONObject salesforceExtension = resource.getJSONObject("urn:salesforce:schemas:extension:2.0");
+					if (salesforceExtension.has("alias")) {
+						resource.put("alias", salesforceExtension.getString("alias"));
+					}
+					resource.remove("urn:salesforce:schemas:extension:2.0");
+				}
+
+				// Rename the SCIM V2 Enterprise extension
+				if (resource.has("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")) {
+					JSONObject enterpriseExtension = resource.getJSONObject("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+					resource.put("urn:scim:schemas:extension:enterprise:1.0", enterpriseExtension);
+					resource.remove("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+				}
+
+				// Remove keys not present in V1
+				resource.remove("emailEncodingKey");
+				resource.remove("timezone");
+
+				// Update the resource in the list
+				resources.put(i, resource);
+			}
+		}
+
+		// Return the complete object, maintaining the "Resources" node
+		return jsonObject;
+	}
+
+	private JSONObject convertV2toV1(JSONObject jsonObject) throws JSONException {
+		// Check if the JSON is a ListResponse with the node ‘Resources’
+		if (jsonObject.has("Resources") && jsonObject.getJSONArray("Resources").length() > 0) {
+			// Extract the first resource from the ‘Resources’ array
+			jsonObject = jsonObject.getJSONArray("Resources").getJSONObject(0);
+		}
+
+		JSONObject transformed = new JSONObject(jsonObject.toString());
+
+		// Update the schema keys to be compatible with V1.
+		JSONArray schemas = transformed.getJSONArray("schemas");
+		for (int i = 0; i < schemas.length(); i++) {
+			if (schemas.getString(i).equals("urn:ietf:params:scim:schemas:core:2.0:User")) {
+				schemas.put(i, "urn:scim:schemas:core:1.0");
+			}
+			if (schemas.getString(i).equals("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")) {
+				schemas.put(i, "urn:scim:schemas:extension:enterprise:1.0");
+			}
+		}
+
+		// Remove attributes not compatible with V1 in "entitlements" key
+		if (transformed.has("entitlements")) {
+			JSONArray entitlements = transformed.getJSONArray("entitlements");
+			for (int i = 0; i < entitlements.length(); i++) {
+				JSONObject entitlement = entitlements.getJSONObject(i);
+				// Remove "$ref"
+				entitlement.remove("$ref");
+				// Remove "type"
+				entitlement.remove("type");
+			}
+		}
+
+		// Relocate "alias" key within Salesforce data
+		if (transformed.has("urn:salesforce:schemas:extension:2.0")) {
+			JSONObject salesforceExtension = transformed.getJSONObject("urn:salesforce:schemas:extension:2.0");
+			if (salesforceExtension.has("alias")) {
+				transformed.put("alias", salesforceExtension.getString("alias"));
+			}
+			// Remove the Salesforce v2 extension
+			transformed.remove("urn:salesforce:schemas:extension:2.0");
+		}
+
+		// Renaming the SCIM V2 Enterprise extension
+		if (transformed.has("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")) {
+			JSONObject enterpriseExtension = transformed.getJSONObject("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+			transformed.put("urn:scim:schemas:extension:enterprise:1.0", enterpriseExtension);
+			transformed.remove("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+		}
+
+		// Remove keys not present in V1
+		transformed.remove("emailEncodingKey");
+		transformed.remove("timezone");
+
+		return transformed;
 	}
 
 	@Override
