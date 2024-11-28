@@ -201,8 +201,10 @@ public class ScimConnector implements Connector, CreateOp, DeleteOp, SchemaOp, S
 
 			loginUrlParts = this.configuration.getBaseUrl().split("\\."); // e.g.
 		}
-
-		providerName = String.join(".", loginUrlParts);
+		// https://login.salesforce.com
+		if (loginUrlParts.length >= 2) {
+			providerName = loginUrlParts[loginUrlParts.length - 2];
+		}
 		StrategyFetcher fetcher = new StrategyFetcher();
 		strategy = fetcher.fetchStrategy(providerName);
 

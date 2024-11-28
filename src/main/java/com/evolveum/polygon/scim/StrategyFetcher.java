@@ -34,10 +34,10 @@ public class StrategyFetcher {
 
 		HandlingStrategy strategy;
 
-		if (providerName.contains(SALESFORCE)) {
+		if (SALESFORCE.equals(providerName)) {
 			LOG.info("Salesforce provider detected");
 			strategy = new SalesforceHandlingStrategy();
-		} else if (providerName.contains(SLACK)) {
+		} else if (SLACK.equals(providerName)) {
 			LOG.info("Slack provider detected");
 			strategy = new SlackHandlingStrategy();
 		} else {

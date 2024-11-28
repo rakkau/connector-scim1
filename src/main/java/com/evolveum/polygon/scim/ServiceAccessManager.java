@@ -151,7 +151,7 @@ public class ServiceAccessManager {
 					}
 					// https://login.salesforce.com
 					if (loginUrlParts.length >= 2) {
-						providerName = loginUrlParts[1];
+						providerName = loginUrlParts[loginUrlParts.length - 2];
 					}
 					
 					if (!providerName.isEmpty()){
