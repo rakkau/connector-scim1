@@ -529,6 +529,7 @@ public class StandardScimHandlingStrategy implements HandlingStrategy {
 				}
 
 				// Remove attributes not compatible with V1 in the "entitlements" key
+				if (resource.has("groups")) resource.remove("groups");
 				if (resource.has("entitlements")) {
 					JSONArray entitlements = resource.getJSONArray("entitlements");
 					for (int k = 0; k < entitlements.length(); k++) {
@@ -588,6 +589,7 @@ public class StandardScimHandlingStrategy implements HandlingStrategy {
 		}
 
 		// Remove attributes not compatible with V1 in "entitlements" key
+		if (transformed.has("groups")) transformed.remove("groups");
 		if (transformed.has("entitlements")) {
 			JSONArray entitlements = transformed.getJSONArray("entitlements");
 			for (int i = 0; i < entitlements.length(); i++) {

@@ -78,6 +78,9 @@ public class SalesforceHandlingStrategy extends StandardScimHandlingStrategy imp
 		multivaluedAttributes.add("members.Group.value");
 		multivaluedAttributes.add("members.default.value");
 		multivaluedAttributes.add("members.default.display");
+		multivaluedAttributes.add("entitlements.default.value");
+		multivaluedAttributes.add("entitlements.default.display");
+		multivaluedAttributes.add("entitlements.default.primary");
 
 		// writableAttributes.add("name.formatted");
 		   writableAttributes.add("entitlements.default.value");
@@ -243,6 +246,8 @@ public class SalesforceHandlingStrategy extends StandardScimHandlingStrategy imp
 		} else {
 			LOGGER.warn("No organization ID specified in instance URL");
 		}
+		LOGGER.info("injectedAttributeSet");
+		LOGGER.info("injectedAttributeSet --> {0}", injectedAttributeSet.toString());
 		return injectedAttributeSet;
 
 	}
