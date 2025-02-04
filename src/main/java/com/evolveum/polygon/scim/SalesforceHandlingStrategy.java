@@ -78,7 +78,6 @@ public class SalesforceHandlingStrategy extends StandardScimHandlingStrategy imp
 		multivaluedAttributes.add("members.Group.value");
 		multivaluedAttributes.add("members.default.value");
 		multivaluedAttributes.add("members.default.display");
-		multivaluedAttributes.add("entitlements.default.value");
 		multivaluedAttributes.add("entitlements.default.display");
 		multivaluedAttributes.add("entitlements.default.primary");
 
@@ -296,10 +295,14 @@ public class SalesforceHandlingStrategy extends StandardScimHandlingStrategy imp
 
 		if (multivaluedAttributes.contains(attributeName)) {
 			infoBuilder.setMultiValued(true);
+		} else if (writableAttributes.contains(attributeName)) {
+			infoBuilder.setUpdateable(true);
+			infoBuilder.setCreateable(true);
+			infoBuilder.setReadable(true);
+			if (attributeName.equals("entitlements.default.value")) {
+				infoBuilder.setMultiValued(true);
+			}
 		}
-			  else if (writableAttributes.contains(attributeName)) {
-			  infoBuilder.setUpdateable(true); infoBuilder.setCreateable(true);
-			  infoBuilder.setReadable(true); }
 
 		return infoBuilder;
 	}
